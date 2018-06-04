@@ -5,8 +5,15 @@ import (
 	"io"
 )
 
+// Source represents types that can yield bytes
+type Source interface {
+	io.Reader
+	Size() int
+}
+
 type source struct {
 	remaining int
+	tot       int
 }
 
 func (b *source) Read(p []byte) (n int, err error) {
@@ -29,10 +36,15 @@ func (b *source) Read(p []byte) (n int, err error) {
 	return written, nil
 }
 
-// New takes as input a length in MB and will yield that many bytes.
+func (b *source) Size() int {
+	return b.tot
+}
+
+// New takes as input a length in MiB and will yield that many bytes.
 // calling Read will always fill the provided buffer, unless the predefined limit is reached
-func New(size uint32) io.Reader {
+func New(size uint32) Source {
 	return &source{
+		tot:       int(size) * 1024 * 1024,
 		remaining: int(size) * 1024 * 1024,
 	}
 }
